@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --background-image-pocketly-gradient: linear-gradient(
+    145deg,
+    #7c5cbf 0%,
+    #b39ddb 60%,
+    #d9cffa 100%
+  );
+  --background-color-background-secondary: #f9f7ff;
+  --border-color-border-default: #e4ddf7;
+  --text-color-text-default: #7c5cbf;
+  --text-color-text-secondary: #9e8ec4;
+}
