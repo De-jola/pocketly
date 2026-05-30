@@ -1,8 +1,39 @@
+import { useNavigate } from "react-router-dom";
+import { useBudget } from "../context/BudgetContext";
 import { FaWallet, FaShare, FaLock } from "react-icons/fa";
 import { BiPieChart, BiLogoGoogle, BiTrendingUp } from "react-icons/bi";
 import { CgMail } from "react-icons/cg";
+
 import Button from "../components/Button.jsx";
 const Login = () => {
+  const navigate = useNavigate();
+  const { setUser, hasCompletedOnboarding } = useBudget();
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    setUser({ uid: "email-user-123", email: "user@gmail.com" });
+
+    if (hasCompletedOnboarding) {
+      navigate("/dashboard");
+    } else {
+      navigate("/onboarding");
+    }
+  };
+  const handleGoogleSignIn = () => {
+    // 1. Mock the user response object returned from a Google OAuth popup window interaction
+    const mockGoogleProfile = {
+      uid: "google-uid-abc-123",
+      email: "user@gmail.com",
+      displayName: "Jane Doe",
+    };
+    setUser(mockGoogleProfile);
+    if (hasCompletedOnboarding) {
+      navigate("/dashboard");
+    } else {
+      // If it's a completely clean slate profile, throw them to the percentage allocations configuration grid
+      navigate("/onboarding");
+    }
+  };
+
   return (
     <main className="flex">
       <section className="flex flex-col gap-19 bg-pocketly-gradient p-14 w-1/2 text-white">
@@ -35,13 +66,17 @@ const Login = () => {
       <section className="flex flex-col gap-2 justify-center w-1/2 px-32 bg-background-secondary">
         <h2 className="text-3xl font-bold">Welcome Back</h2>
         <h3 className="mb-3 text-sm">Log in to your Pocketly account</h3>
-        <Button buttonText="Google" buttonLogo={<BiLogoGoogle />} />
+        <Button
+          buttonText="Google"
+          buttonLogo={<BiLogoGoogle />}
+          onClick={handleGoogleSignIn}
+        />
         <div className="flex gap-2 items-center">
           <p className="border-t-2 w-1/3 border-[#e4ddf7]"></p>
           <p className="text-xs w-1/2 text-center">Or continue with email</p>
           <p className="border-t-2 w-1/3 border-[#e4ddf7]"></p>
         </div>
-        <form>
+        <form onSubmit={handleLoginSubmit}>
           <label
             htmlFor="email"
             className="flex items-center gap-2 relative text-xs"

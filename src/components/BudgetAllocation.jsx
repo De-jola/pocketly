@@ -4,22 +4,15 @@ import SectionHeader from "./SectionHeader";
 import CategoryCard from "./CategoryCard";
 
 const BudgetAllocation = ({ spendingAmount, spendingPercent }) => {
-  const { expenses } = useBudget(); // Grab the logs globally
+  const { expenses, categoryPercents } = useBudget(); // 👈 Grab categoryPercents from Context
 
-  // Your category allocation percentages
-  const foodPercent = 20;
-  const dataPercent = 20;
-  const subscriptionPercent = 20;
-  const miscellaneousPercent = 20;
-  const transportPercent = 20;
-
-  // Total absolute pocket caps allowed per category
+  // Clean dynamic object mapping: calculates currency caps using values chosen by the user
   const categoryBudgets = {
-    Food: (spendingAmount * foodPercent) / 100,
-    Data: (spendingAmount * dataPercent) / 100,
-    Subscription: (spendingAmount * subscriptionPercent) / 100,
-    Miscellaneous: (spendingAmount * miscellaneousPercent) / 100,
-    Transport: (spendingAmount * transportPercent) / 100,
+    Food: (spendingAmount * categoryPercents.Food) / 100,
+    Data: (spendingAmount * categoryPercents.Data) / 100,
+    Subscription: (spendingAmount * categoryPercents.Subscription) / 100,
+    Miscellaneous: (spendingAmount * categoryPercents.Miscellaneous) / 100,
+    Transport: (spendingAmount * categoryPercents.Transport) / 100,
   };
 
   // Helper calculation function: Sums up expenses matching a specific category name string
