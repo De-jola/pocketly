@@ -1,6 +1,12 @@
-# 📂 Pocketly — Mindful Wealth Tracking Matrix
+# 📂 Pocketly — Your Very Cool Budgeting Partner
 
-Pocketly is a mobile-responsive, production-ready single-page budgeting application designed to help users manage personal finance allocations with intention and composure. By matching a clean frontend with an integrated browser cache persistence strategy and secure third-party account session loops, Pocketly delivers robust data boundaries between profiles without running complex server clusters.
+## Problem Statement
+
+Since this is a very personal project, I decided to do something that I would actually use. I realized that i'm a very "money-calculative" person. Not that I know how to manage money well but I like to break it down. I had tried the 30%, 20%, 10% rule and others but i wanted something custom. I used to do my calculations on paper and my very tired XR's calculator and that was a hassle. Then it clicked, Why can't i make something that does these calculations for me easily and i can actually track where my money goes ? That's how pocketly was born.
+
+---
+
+Pocketly is a mobile-responsive budgeting application designed to help users manage personal finance allocations with intention and composure. By matching a clean frontend with an integrated browser cache persistence strategy and secure third-party account session loops, Pocketly delivers robust data boundaries between profiles without running complex server clusters.
 
 ---
 
