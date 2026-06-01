@@ -28,7 +28,7 @@ const Home = () => {
           <Button text="Start Your Journey" onClick={handleNavigateToLogin} />
         </article>
         <picture className="max-w-lg">
-          <img src="public\images\pocketlyHero.png" alt="Hero Image" />
+          <img src="/images/pocketlyHero.png" alt="Hero Image" />
         </picture>
       </section>
       <section className="px-10 py-12">
@@ -58,7 +58,7 @@ const Home = () => {
           </header>
           <picture className="max-w-lg absolute bottom-0 right-0">
             <img
-              src="public\images\pocketlyVisualization.png"
+              src="/images/pocketlyVisualization.png"
               alt="Visualization"
               width={540}
               height={400}
