@@ -1,205 +1,170 @@
-// src/pages/BudgetFormPage.jsx
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import Brand from "../components/Brand";
+import ProgressBar from "../components/ProgressBar";
+import CategoryCard from "../components/CategoryCard";
+import { FaDollarSign } from "react-icons/fa";
 import { useBudget } from "../context/BudgetContext";
-import { FaWallet } from "react-icons/fa6";
+import { useNavigate } from "react-router-dom";
+import {
+  FaUtensils,
+  FaCar,
+  FaEllipsisH,
+  FaQuestionCircle,
+} from "react-icons/fa";
+import { BiWifi } from "react-icons/bi";
 
-const BudgetFormPage = () => {
+const BudgetForm = () => {
   const {
     income,
     setIncome,
-    savingsPercent,
-    setSavingsPercent,
-    spendingPercent,
-    setSpendingPercent,
-    categoryPercents,
-    setCategoryPercents,
-    setHasCompletedOnboarding,
+    savings,
+    setSavings,
+    spending,
+    setSpending,
+    remainder,
+    spendingAmount,
+    categoryAmounts,
+    updateCategoryAmount,
   } = useBudget();
 
-  const navigate = useNavigate();
-  const [error, setError] = useState("");
-
-  // Live Math Calculations to display context to the user as they type
-  const spendingAmount = (income * spendingPercent) / 100;
-
-  // Calculate total category percentage allocation sum
-  const totalCategoryAllocated = Object.values(categoryPercents).reduce(
-    (a, b) => a + b,
-    0,
-  );
-
-  // Helper handler function to update individual keys inside our state object
-  const handleCategoryChange = (category, value) => {
-    setCategoryPercents((prev) => ({
-      ...prev,
-      [category]: Number(value),
-    }));
+  const CATEGORY_ICONS = {
+    food: FaUtensils,
+    transport: FaCar,
+    subscription: BiWifi,
+    Miscellaneous: FaEllipsisH,
+    // Add a fallback icon just in case a new category doesn't have an icon yet
+    default: FaQuestionCircle,
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (savingsPercent + spendingPercent > 100) {
-      setError("Total allocation (Savings + Spending) cannot exceed 100%!");
-      return;
-    }
-
-    // Critical Validation Guard: Must hit exactly 100% of the spending limit box
-    if (totalCategoryAllocated !== 100) {
-      setError(
-        `Your category allocations must add up to exactly 100%. Currently at ${totalCategoryAllocated}%.`,
-      );
-      return;
-    }
-
-    setError("");
-    setHasCompletedOnboarding(true);
+  const navigate = useNavigate();
+  const handleNavToDashboard = () => {
     navigate("/dashboard");
   };
 
   return (
-    <main className="min-h-screen bg-[#7c5cbf] py-12 px-4 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl space-y-6">
-        <div className="flex items-center gap-2 text-[#7c5cbf]">
-          <FaWallet size={24} />
-          <span className="text-lg font-bold">Pocketly</span>
-        </div>
+    <main className="px-10 py-6 bg-[#FAF8FF] scroll-smooth">
+      <nav className="flex items-center justify-between">
+        <Brand color="primary" />
+        <ProgressBar text="Setting up your budget..." />
+      </nav>
+      <header className="text-center max-w-2xl mx-auto my-12 ">
+        <h1 className="text-3xl font-bold text-heading mb-2">
+          Define Your Monthly Plan
+        </h1>
+        <p className=" text-label">
+          Let's build a mindful foundation for your finances.
+        </p>
+      </header>
+      <section
+        id="budget-form"
+        className="w-[800px] mx-auto bg-white p-8 rounded-lg shadow"
+      >
+        <h2 className="font-bold text-heading text-xl flex gap-2 items-center mb-6">
+          <span className="bg-primary text-white px-4 py-2 rounded-3xl font-base">
+            1
+          </span>
+          Step 1: Income & High-Level Split
+        </h2>
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex flex-col gap-6 mt-4 relative w-1/2">
+            <label htmlFor="income">Monthly Income</label>
 
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">
-            Configure Your Budget Plan
-          </h2>
-          <p className="text-sm text-slate-500">
-            Set income goals and partition your spending limits.
-          </p>
-        </div>
-
-        {error && (
-          <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg font-medium">
-            {error}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Top Level Income Config Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                Monthly Income (₦)
-              </label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={income || ""}
-                onChange={(e) => setIncome(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded-lg outline-none focus:border-purple-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                Savings Target (%)
-              </label>
-              <input
-                type="number"
-                required
-                max="100"
-                value={savingsPercent || ""}
-                onChange={(e) => setSavingsPercent(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded-lg outline-none focus:border-purple-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                Total Spending (%)
-              </label>
-              <input
-                type="number"
-                required
-                max="100"
-                value={spendingPercent || ""}
-                onChange={(e) => setSpendingPercent(Number(e.target.value))}
-                className="w-full px-3 py-2 border rounded-lg outline-none focus:border-purple-600"
-              />
-            </div>
+            <FaDollarSign className="absolute top-18 left-3 transform -translate-y-1/2 text-gray-500" />
+            <input
+              type="number"
+              id="income"
+              placeholder="5000"
+              className="px-8 py-3 outline-none focus:ring-2 focus:ring-primary rounded-md"
+              onChange={(e) => setIncome(Number(e.target.value))}
+            />
+            <small>This is the net amount you receive each month.</small>
           </div>
-
-          {/* DYNAMIC CATEGORY SLICER PANEL */}
-          <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-200/60 pb-2">
-              <h3 className="font-bold text-sm text-slate-800">
-                Distribute Spending Bucket
-              </h3>
-              <span className="text-xs font-semibold text-slate-500">
-                Total Pool:{" "}
-                <span className="text-purple-700 font-bold">
-                  ₦{spendingAmount.toLocaleString()}
-                </span>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {Object.keys(categoryPercents).map((cat) => {
-                // Calculate the real currency value for each category on the fly
-                const absoluteAmount =
-                  (spendingAmount * categoryPercents[cat]) / 100;
-                return (
-                  <div
-                    key={cat}
-                    className="bg-white p-3 rounded-lg border border-slate-200/60 shadow-sm flex flex-col justify-between"
-                  >
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      {cat}
-                    </label>
-                    <div className="relative mt-auto">
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        max="100"
-                        value={categoryPercents[cat] || ""}
-                        onChange={(e) =>
-                          handleCategoryChange(cat, e.target.value)
-                        }
-                        className="w-full pr-5 pl-2 py-1.5 text-sm border rounded outline-none focus:border-purple-600 font-semibold"
-                      />
-                      <span className="absolute right-1.5 top-2 text-xs text-slate-400">
-                        %
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-medium mt-1.5 block truncate">
-                      ₦{absoluteAmount.toLocaleString()}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Live Indicator Progress Tracker */}
-            <div className="flex justify-between items-center text-xs font-semibold mt-2">
-              <span
-                className={
-                  totalCategoryAllocated === 100
-                    ? "text-green-600"
-                    : "text-amber-600"
+          <div className="flex flex-col gap-4 mt-4 w-1/2">
+            <div>
+              <label htmlFor="savings"> Savings Goal ({savings}%)</label>
+              <input
+                type="range"
+                id="savings"
+                min="0"
+                max="100"
+                value={savings}
+                onChange={(e) =>
+                  setSavings(Math.min(Number(e.target.value), 100 - spending))
                 }
-              >
-                Allocation Progress: {totalCategoryAllocated}% / 100%
-              </span>
+                className="w-full"
+              />
             </div>
+            <div>
+              <label htmlFor="spending"> Spending Goal ({spending}%)</label>
+              <input
+                type="range"
+                id="spending"
+                min="0"
+                max="100"
+                value={spending}
+                onChange={(e) =>
+                  setSpending(Math.min(Number(e.target.value), 100 - savings))
+                }
+                className="w-full"
+              />
+            </div>
+            <output className="block p-3 bg-purple-50 rounded text-purple-900 font-bold">
+              Remaining: {remainder}%
+            </output>
+            <a
+              href="#category-allocation"
+              className="bg-primary text-white p-2 rounded-3xl cursor-pointer hover:scale-105 transition-transform mt-6 flex items-center justify-center w-full"
+            >
+              Continue to Step 2
+            </a>
           </div>
+        </div>
+      </section>
 
-          <button
-            type="submit"
-            className="w-full py-3 bg-[#7c5cbf] text-white font-semibold rounded-lg hover:bg-[#694ca3] transition-colors shadow-md"
-          >
-            Save and Launch Dashboard
+      <section
+        id="category-allocation"
+        className="w-[800px] mx-auto bg-white p-8 rounded-lg shadow mt-10 scroll-mt-16"
+      >
+        <h2 className="font-bold text-heading text-xl flex gap-2 items-center mb-6">
+          <span className="bg-primary text-white px-4 py-2 rounded-3xl font-base">
+            2
+          </span>
+          Step 2: Income & High-Level Split
+        </h2>
+        <div className="flex items-center bg-[#915BAE]/10 justify-between p-4 rounded-lg">
+          <p className="text-label">Allocating your monthly spending of </p>
+          <p className="font-bold text-primary tracking-wide">
+            ${spendingAmount.toLocaleString()}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-6 mt-6">
+          {Object.entries(categoryAmounts).map(([category, amount]) => {
+            const SelectedIcon =
+              CATEGORY_ICONS[category.toLowerCase()] || CATEGORY_ICONS.default;
+            return (
+              <CategoryCard
+                key={category}
+                category={category}
+                amount={amount}
+                icon={SelectedIcon}
+                updateCategoryAmount={updateCategoryAmount}
+              />
+            );
+          })}
+        </div>
+        <div className="flex justify-between gap-4 mt-6">
+          <button type="button" className="font-medium text-primary">
+            back
           </button>
-        </form>
-      </div>
+          <button
+            type="button"
+            className="bg-primary text-white p-2 rounded-3xl cursor-pointer hover:scale-105 transition-transform mt-6 flex items-center justify-center w-1/2"
+            onClick={handleNavToDashboard}
+          >
+            Load Dashboard
+          </button>
+        </div>
+      </section>
     </main>
   );
 };
-
-export default BudgetFormPage;
+export default BudgetForm;

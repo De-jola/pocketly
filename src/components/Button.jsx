@@ -1,12 +1,12 @@
-const Button = ({ buttonText, buttonLogo, onClick }) => {
+const Button = ({ text, onClick }) => {
   return (
     <button
-      className="flex items-center gap-2 bg-white justify-center py-1 rounded-lg w-full cursor-pointer mb-3 border border-border-default text-sm"
+      className="bg-primary text-white px-16 py-6 rounded-3xl cursor-pointer hover:scale-105 transition-transform mt-6"
       onClick={onClick}
     >
-      {buttonLogo}
-      {buttonText}
+      {text}
     </button>
   );
 };
+
 export default Button;

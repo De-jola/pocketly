@@ -1,27 +1,30 @@
-import { FaWallet } from "react-icons/fa";
-import { GrDashboard, GrBarChart, GrSettingsOption } from "react-icons/gr";
+import Brand from "./Brand";
+import { useNavigate } from "react-router-dom";
 const Sidebar = () => {
+  const navigate = useNavigate();
+  const handleNavToReports = () => {
+    navigate("/reports");
+  };
   return (
-    <main className="min-h-screen px-4 flex flex-col items-start gap-4">
-      <nav className="flex items-center gap-2 px-2">
-        <FaWallet className="text-black" />
-        <p className="font-bold">Pocketly</p>
-      </nav>
-      <ul className="flex flex-col gap-4 mt-6 w-full">
-        <li className="flex items-center gap-2 text-[#7c5cbf] font-semibold hover:bg-background-secondary transition-colors p-2 rounded-lg cursor-pointer">
-          <GrDashboard className="text-black" />
+    <aside className="w-64 bg-[#FAF8FF] h-screen px-10 py-6 flex flex-col gap-6 shadow-lg fixed h-screen">
+      <Brand color="primary" />
+      <nav className="flex flex-col gap-4">
+        <a href="#" className="text-label hover:text-gray-900">
           Dashboard
-        </li>
-        <li className="flex items-center gap-2 text-[#7c5cbf] font-semibold hover:bg-background-secondary transition-colors p-2 rounded-lg cursor-pointer">
-          <GrBarChart className="text-black" />
+        </a>
+
+        <a
+          href="#"
+          className="text-label hover:text-gray-900"
+          onClick={handleNavToReports}
+        >
           Reports
-        </li>
-        <li className="flex items-center gap-2 text-[#7c5cbf] font-semibold hover:bg-background-secondary transition-colors p-2 rounded-lg cursor-pointer ">
-          <GrSettingsOption className="text-black" />
+        </a>
+        <a href="#" className="text-label hover:text-gray-900">
           Settings
-        </li>
-      </ul>
-    </main>
+        </a>
+      </nav>
+    </aside>
   );
 };
 export default Sidebar;

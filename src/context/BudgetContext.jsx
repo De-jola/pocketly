@@ -1,105 +1,107 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
-
+import { createContext, useContext, useState } from "react";
 const BudgetContext = createContext();
 
 export const BudgetProvider = ({ children }) => {
-  // 1. Initial State Helpers: Attempt to read saved data from browser storage, otherwise use defaults
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("pocketly_user");
-    return savedUser ? JSON.parse(savedUser) : null;
+  const [income, setIncome] = useState(5000);
+  const [savings, setSavings] = useState(20);
+  const [spending, setSpending] = useState(50);
+  const [categoryAmounts, setCategoryAmounts] = useState({
+    food: 400,
+    transportation: 250,
+    subscription: 150,
+    miscellaneous: 100,
   });
+  const [expenses, setExpenses] = useState([]);
 
-  const [income, setIncome] = useState(() => {
-    return Number(localStorage.getItem("pocketly_income")) || 0;
-  });
-
-  const [savingsPercent, setSavingsPercent] = useState(() => {
-    return Number(localStorage.getItem("pocketly_savings_percent")) || 10;
-  });
-
-  const [spendingPercent, setSpendingPercent] = useState(() => {
-    return Number(localStorage.getItem("pocketly_spending_percent")) || 40;
-  });
-
-  const [categoryPercents, setCategoryPercents] = useState(() => {
-    const savedCats = localStorage.getItem("pocketly_category_percents");
-    return savedCats
-      ? JSON.parse(savedCats)
-      : {
-          Food: 20,
-          Data: 20,
-          Subscription: 20,
-          Miscellaneous: 20,
-          Transport: 20,
-        };
-  });
-
-  const [expenses, setExpenses] = useState(() => {
-    const savedExpenses = localStorage.getItem("pocketly_expenses");
-    return savedExpenses ? JSON.parse(savedExpenses) : [];
-  });
-
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
-    return localStorage.getItem("pocketly_onboarding") === "true";
-  });
-
-  // 2. Synchronize States with LocalStorage whenever they change
-  useEffect(() => {
-    if (user) localStorage.setItem("pocketly_user", JSON.stringify(user));
-    else localStorage.removeItem("pocketly_user");
-  }, [user]);
-
-  useEffect(() => {
-    localStorage.setItem("pocketly_income", income);
-    localStorage.setItem("pocketly_savings_percent", savingsPercent);
-    localStorage.setItem("pocketly_spending_percent", spendingPercent);
-    localStorage.setItem(
-      "pocketly_category_percents",
-      JSON.stringify(categoryPercents),
-    );
-    localStorage.setItem("pocketly_expenses", JSON.stringify(expenses));
-    localStorage.setItem("pocketly_onboarding", hasCompletedOnboarding);
-  }, [
-    income,
-    savingsPercent,
-    spendingPercent,
-    categoryPercents,
-    expenses,
-    hasCompletedOnboarding,
-  ]);
-
-  // Logout utility function to clear state easily later if needed
-  const logout = () => {
-    setUser(null);
-    setIncome(0);
-    setExpenses([]);
-    setHasCompletedOnboarding(false);
-    localStorage.clear();
+  const spendingAmount = (spending / 100) * income;
+  const savingsAmount = (savings / 100) * income;
+  const addExpense = (newExpense) => {
+    setExpenses((prev) => [
+      ...prev,
+      {
+        ...newExpense,
+        id: Date.now(),
+        amount: Number(newExpense.amount),
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        time: new Date().toLocaleTimeString(),
+      },
+    ]);
   };
+  const getCategorySpent = (categoryName) => {
+    return expenses
+      .filter(
+        (exp) => exp.category.toLowerCase() === categoryName.toLowerCase(),
+      )
+      .reduce((sum, exp) => sum + exp.amount, 0);
+  };
+
+  // 2. Update function with strict cash verification
+  const updateCategoryAmount = (category, inputValue) => {
+    // If the input is empty (user backspaced everything), let them type
+    if (inputValue === "") {
+      setCategoryAmounts((prev) => ({ ...prev, [category]: "" }));
+      return;
+    }
+
+    const numericValue = Number(inputValue);
+    if (isNaN(numericValue) || numericValue < 0) return;
+
+    setCategoryAmounts((prev) => {
+      const proposedAmounts = { ...prev, [category]: numericValue };
+
+      const totalAllocated = Object.values(proposedAmounts).reduce(
+        (sum, amt) => sum + (amt || 0),
+        0,
+      );
+
+      if (totalAllocated > spendingAmount) {
+        return prev;
+      }
+
+      return proposedAmounts;
+    });
+  };
+
+  // Calculate remaining unallocated cash inside the spending pool
+  const unallocatedSpending =
+    spendingAmount -
+    Object.values(categoryAmounts).reduce((sum, amt) => sum + (amt || 0), 0);
+
+  const remainder = 100 - (savings + spending);
+  const remainderAmount = income - (savingsAmount + spendingAmount);
 
   return (
     <BudgetContext.Provider
       value={{
-        user,
-        setUser,
         income,
         setIncome,
-        savingsPercent,
-        setSavingsPercent,
-        spendingPercent,
-        setSpendingPercent,
-        categoryPercents,
-        setCategoryPercents,
+        savings,
+        setSavings,
+        savingsAmount,
+        spending,
+        setSpending,
+        remainder,
+        remainderAmount,
+        spendingAmount,
+        categoryAmounts,
+        updateCategoryAmount,
+        unallocatedSpending,
         expenses,
-        setExpenses,
-        hasCompletedOnboarding,
-        setHasCompletedOnboarding,
-        logout,
+        addExpense,
+        getCategorySpent,
       }}
     >
       {children}
     </BudgetContext.Provider>
   );
 };
-
-export const useBudget = () => useContext(BudgetContext);
+export const useBudget = () => {
+  const context = useContext(BudgetContext);
+  if (!context) {
+    throw new Error("useBudget must be used within a BudgetProvider");
+  }
+  return context;
+};
