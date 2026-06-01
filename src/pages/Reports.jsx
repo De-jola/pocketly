@@ -15,7 +15,7 @@ import html2pdf from "html2pdf.js/dist/html2pdf.bundle.js";
 import InsightCard from "../components/InsightCard";
 
 const Reports = () => {
-  const { income, savingsAmount, spendingAmount } = useBudget();
+  const { income, savingsAmount, spendingAmount, expenses } = useBudget();
   const [isDownloading, setIsDownloading] = useState(false);
   const reportRef = useRef(null);
 
@@ -26,33 +26,48 @@ const Reports = () => {
 
   // Static mockup data targets for calculation values (Replace with context tracking arrays if built)
   const dailyAverage = totalOutflow > 0 ? Math.round(totalOutflow / 30) : 0;
-  const highestSavingDay = "May 24, 2026";
-  const highestSpendCategory = "Transportation";
+  const highestSpendCategory = (() => {
+    if (!expenses || expenses.length === 0) return "None";
+
+    // Group total amounts by category
+    const categoryTotals = expenses.reduce((acc, exp) => {
+      const cat = (exp.category || "miscellaneous").trim().toLowerCase();
+      acc[cat] = (acc[cat] || 0) + (exp.amount || 0);
+      return acc;
+    }, {});
+
+    // Find the category key with the maximum total spending
+    return Object.keys(categoryTotals).reduce(
+      (a, b) => (categoryTotals[a] > categoryTotals[b] ? a : b),
+      "miscellaneous",
+    );
+  })();
+
+  // 📈 B. DYNAMIC HIGHEST SAVING DAY (Lowest Burn Day Approach)
+  const highestSavingDay = (() => {
+    if (!expenses || expenses.length === 0) return "No Records";
+
+    // Group spending by your exact generated date strings (e.g. "Jun 1")
+    const dailyDeductions = expenses.reduce((acc, exp) => {
+      // Maps directly to your function's exp.date property
+      const dateKey = exp.date || "Unknown Date";
+      acc[dateKey] = (acc[dateKey] || 0) + exp.amount;
+      return acc;
+    }, {});
+
+    // Identify the logged calendar day where aggregate spending was at its absolute lowest
+    // minimizing burn means preserving maximum net savings for that tracking loop block
+    const primeDate = Object.keys(dailyDeductions).reduce((a, b) =>
+      dailyDeductions[a] < dailyDeductions[b] ? a : b,
+    );
+
+    return primeDate; // Returns your formatted string cleanly, e.g. "Jun 1"
+  })();
 
   // --- 2. HTML to PDF Compilation Handler ---
   const handleDownloadPDF = () => {
-    const element = reportRef.current;
-    if (!element) return;
-
-    setIsDownloading(true);
-
-    const options = {
-      margin: [10, 10, 10, 10],
-      filename: "Pocketly_Monthly_Financial_Report.pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    };
-
-    // Run the conversion pipeline
-    html2pdf()
-      .from(element)
-      .set(options)
-      .save()
-      .then(() => setIsDownloading(false))
-      .catch(() => setIsDownloading(false));
+    window.print();
   };
-
   // SVG Ring Geometric Dimensions
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
@@ -60,12 +75,12 @@ const Reports = () => {
     circumference - (flowPercentage / 100) * circumference;
 
   return (
-    <main className="flex min-h-screen w-screen bg-gray-50 overflow-x-hidden ">
+    <main className="flex min-h-screen  bg-[#FAF8FF] ">
       {/* Structural Sidebar Navigation */}
       <Sidebar />
 
       {/* Main Panel Content Wrapper */}
-      <section className="flex-1 pl-75 p-6  flex flex-col gap-6  ">
+      <section className="w-full pl-70 p-6 flex flex-col gap-6  ">
         {/* Top Control Toolbar Row */}
         <header className="flex justify-between items-center border-b border-gray-200 pb-4">
           <div>
@@ -79,10 +94,10 @@ const Reports = () => {
           <button
             onClick={handleDownloadPDF}
             disabled={isDownloading}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:scale-[1.02] active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <FaDownload className={isDownloading ? "animate-bounce" : ""} />
-            {isDownloading ? "Generating PDF..." : "Export PDF Report"}
+            {isDownloading ? "Compiling Report..." : "Export PDF Report"}
           </button>
         </header>
 
@@ -90,7 +105,7 @@ const Reports = () => {
         <div
           ref={reportRef}
           id="report-content"
-          className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-8 max-w-4xl"
+          className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-8"
         >
           {/* PDF Document Header Block */}
           <div className="flex justify-between items-start border-b-2 border-gray-50 pb-4">
