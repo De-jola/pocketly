@@ -44,7 +44,7 @@ const Login = () => {
       if (isSignUp) {
         await createUserWithEmailAndPassword(auth, email, password);
         clearInputCache();
-        navigate("/budget-form");
+        navigate("/setup-budget");
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         clearInputCache();
