@@ -7,6 +7,7 @@ import SignUp from "./pages/SignUp.jsx";
 import BudgetForm from "./pages/BudgetForm.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Reports from "./pages/Reports.jsx";
+import Settings from "./pages/Settings.jsx";
 import { BudgetProvider } from "./context/BudgetContext.jsx";
 import "./index.css";
 
@@ -40,6 +41,10 @@ const router = createBrowserRouter([
       {
         path: "reports",
         element: <Reports />,
+      },
+      {
+        path: "settings",
+        element: <Settings />,
       },
     ],
   },

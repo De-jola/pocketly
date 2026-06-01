@@ -5,10 +5,9 @@ const CategoryBudget = () => {
   const { categoryAmounts } = useBudget();
 
   return (
-    // Added structural layout wrappers to format the stack cleanly on screen
-    <main className=" flex flex-col gap-4 bg-white p-6 rounded-xl">
-      <header className="mb-2">
-        <h2 className="text-xl font-bold text-heading tracking-wide">
+    <section className="w-full flex flex-col gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-purple-50 shadow-sm">
+      <header className="mb-1">
+        <h2 className="text-lg font-black text-heading tracking-tight">
           Category Budgets
         </h2>
         <p className="text-xs text-gray-400">
@@ -16,17 +15,16 @@ const CategoryBudget = () => {
         </p>
       </header>
 
-      {/* 1. Loop through the key-value dictionary array entries */}
-      {Object.entries(categoryAmounts).map(([categoryName, amountValue]) => (
-        <CategoryBar
-          key={categoryName}
-          category={categoryName}
-          // Even though CategoryBar fetches its own data internally,
-          // passing amountValue here keeps prop signatures clear if needed later
-          amount={amountValue}
-        />
-      ))}
-    </main>
+      <div className="flex flex-col gap-3">
+        {Object.entries(categoryAmounts).map(([categoryName, amountValue]) => (
+          <CategoryBar
+            key={categoryName}
+            category={categoryName}
+            amount={amountValue}
+          />
+        ))}
+      </div>
+    </section>
   );
 };
 

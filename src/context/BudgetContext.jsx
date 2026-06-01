@@ -1,33 +1,93 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const BudgetContext = createContext();
 
 export const BudgetProvider = ({ children }) => {
-  const [income, setIncome] = useState(5000);
-  const [savings, setSavings] = useState(20);
-  const [spending, setSpending] = useState(50);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [categoryAmounts, setCategoryAmounts] = useState({
-    food: 400,
-    transportation: 250,
-    subscription: 150,
-    miscellaneous: 100,
+  // 1. PERSISTENT DASHBOARD PORTAL INITIALIZERS
+  const [income, setIncome] = useState(() => {
+    const saved = localStorage.getItem("pocketly_income");
+    return saved ? Number(saved) : 5000;
   });
 
-  // Load initial data from Local Storage fallback window, else start empty
-  const [expenses, setExpenses] = useState(() => {
-    const savedExpenses = localStorage.getItem("pocketly_expenses");
-    return savedExpenses ? JSON.parse(savedExpenses) : [];
+  const [savings, setSavings] = useState(() => {
+    const saved = localStorage.getItem("pocketly_savings");
+    return saved ? Number(saved) : 20;
   });
 
-  // Calculate allocated structural pools based on percentages
+  const [spending, setSpending] = useState(() => {
+    const saved = localStorage.getItem("pocketly_spending");
+    return saved ? Number(saved) : 50;
+  });
+
+  const [categoryAmounts, setCategoryAmounts] = useState(() => {
+    const saved = localStorage.getItem("pocketly_category_amounts");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          food: 400,
+          transportation: 250,
+          subscription: 150,
+          miscellaneous: 100,
+        };
+  });
+
+  const [expenses, setExpenses] = useState([]);
+
+  // 2. SESSION LIFECYCLE MONITOR
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        // Namespace the expense log specifically to the unique user account UID
+        const savedExpenses = localStorage.getItem(
+          `pocketly_expenses_${currentUser.uid}`,
+        );
+        setExpenses(savedExpenses ? JSON.parse(savedExpenses) : []);
+      } else {
+        setExpenses([]);
+      }
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  // 3. AUTOMATED REAL-TIME SYNCHRONIZATION HOOKS
+  useEffect(() => {
+    localStorage.setItem("pocketly_income", income);
+  }, [income]);
+
+  useEffect(() => {
+    localStorage.setItem("pocketly_savings", savings);
+  }, [savings]);
+
+  useEffect(() => {
+    localStorage.setItem("pocketly_spending", spending);
+  }, [spending]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "pocketly_category_amounts",
+      JSON.stringify(categoryAmounts),
+    );
+  }, [categoryAmounts]);
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(
+        `pocketly_expenses_${user.uid}`,
+        JSON.stringify(expenses),
+      );
+    }
+  }, [expenses, user]);
+
+  // Math tracking matrices
   const spendingAmount = (spending / 100) * income;
   const savingsAmount = (savings / 100) * income;
-
-  // Sync expenses array to local storage automatically when it mutates
-  useEffect(() => {
-    localStorage.setItem("pocketly_expenses", JSON.stringify(expenses));
-  }, [expenses]);
 
   const addExpense = (newExpense) => {
     setExpenses((prev) => [
@@ -54,7 +114,6 @@ export const BudgetProvider = ({ children }) => {
       .reduce((sum, exp) => sum + exp.amount, 0);
   };
 
-  // Update budget category ceilings with strict allocation guardrails
   const updateCategoryAmount = (category, inputValue) => {
     if (inputValue === "") {
       setCategoryAmounts((prev) => ({ ...prev, [category]: "" }));
@@ -66,34 +125,30 @@ export const BudgetProvider = ({ children }) => {
 
     setCategoryAmounts((prev) => {
       const proposedAmounts = { ...prev, [category]: numericValue };
-
       const totalAllocated = Object.values(proposedAmounts).reduce(
         (sum, amt) => sum + (amt || 0),
         0,
       );
 
       if (totalAllocated > spendingAmount) {
-        return prev; // Block updates if it exceeds the maximum spending limit cap
+        return prev; // Block limits if they exceed the calculated maximum spending boundary
       }
 
       return proposedAmounts;
     });
   };
 
-  // Calculate actual total spent from transactions dynamically without setting states
   const totalExpensesSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-  // Calculate remaining unallocated cash inside the spending limit pool
   const unallocatedSpending =
     spendingAmount -
     Object.values(categoryAmounts).reduce((sum, amt) => sum + (amt || 0), 0);
-
   const remainder = 100 - (savings + spending);
   const remainderAmount = income - (savingsAmount + spendingAmount);
 
   return (
     <BudgetContext.Provider
       value={{
+        user,
         income,
         setIncome,
         savings,
@@ -103,8 +158,8 @@ export const BudgetProvider = ({ children }) => {
         setSpending,
         remainder,
         remainderAmount,
-        spendingAmount, // Total allocated budget pool limit (e.g. 2500)
-        totalExpensesSpent, // 👈 New: Actual living sum of logged items (e.g. 2150)
+        spendingAmount,
+        totalExpensesSpent,
         categoryAmounts,
         updateCategoryAmount,
         unallocatedSpending,
@@ -113,7 +168,7 @@ export const BudgetProvider = ({ children }) => {
         getCategorySpent,
       }}
     >
-      {BudgetContext.Provider && children}
+      {!loading && children}
     </BudgetContext.Provider>
   );
 };

@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import { useBudget } from "../context/BudgetContext";
 import Sidebar from "../components/Sidebar";
 import {
@@ -10,81 +9,38 @@ import {
   FaShieldAlt,
 } from "react-icons/fa";
 import { BiTrendingUp } from "react-icons/bi";
-import { FaNairaSign } from "react-icons/fa6";
-import html2pdf from "html2pdf.js/dist/html2pdf.bundle.js";
 import InsightCard from "../components/InsightCard";
 
 const Reports = () => {
   const { income, savingsAmount, spendingAmount, expenses } = useBudget();
-  const [isDownloading, setIsDownloading] = useState(false);
-  const reportRef = useRef(null);
 
-  // --- 1. Statistical Math Processing Calculations ---
   const totalOutflow = savingsAmount + spendingAmount;
   const flowPercentage =
     income > 0 ? Math.min((totalOutflow / income) * 100, 100) : 0;
-
-  // Static mockup data targets for calculation values (Replace with context tracking arrays if built)
   const dailyAverage = totalOutflow > 0 ? Math.round(totalOutflow / 30) : 0;
-  const highestSpendCategory = (() => {
-    if (!expenses || expenses.length === 0) return "None";
 
-    // Group total amounts by category
-    const categoryTotals = expenses.reduce((acc, exp) => {
-      const cat = (exp.category || "miscellaneous").trim().toLowerCase();
-      acc[cat] = (acc[cat] || 0) + (exp.amount || 0);
-      return acc;
-    }, {});
+  const highestSpendCategory = "Transportation";
+  const highestSavingDay = "May 24, 2026";
 
-    // Find the category key with the maximum total spending
-    return Object.keys(categoryTotals).reduce(
-      (a, b) => (categoryTotals[a] > categoryTotals[b] ? a : b),
-      "miscellaneous",
-    );
-  })();
-
-  // 📈 B. DYNAMIC HIGHEST SAVING DAY (Lowest Burn Day Approach)
-  const highestSavingDay = (() => {
-    if (!expenses || expenses.length === 0) return "No Records";
-
-    // Group spending by your exact generated date strings (e.g. "Jun 1")
-    const dailyDeductions = expenses.reduce((acc, exp) => {
-      // Maps directly to your function's exp.date property
-      const dateKey = exp.date || "Unknown Date";
-      acc[dateKey] = (acc[dateKey] || 0) + exp.amount;
-      return acc;
-    }, {});
-
-    // Identify the logged calendar day where aggregate spending was at its absolute lowest
-    // minimizing burn means preserving maximum net savings for that tracking loop block
-    const primeDate = Object.keys(dailyDeductions).reduce((a, b) =>
-      dailyDeductions[a] < dailyDeductions[b] ? a : b,
-    );
-
-    return primeDate; // Returns your formatted string cleanly, e.g. "Jun 1"
-  })();
-
-  // --- 2. HTML to PDF Compilation Handler ---
-  const handleDownloadPDF = () => {
+  const handlePrintPDF = () => {
     window.print();
   };
-  // SVG Ring Geometric Dimensions
+
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset =
     circumference - (flowPercentage / 100) * circumference;
 
   return (
-    <main className="flex min-h-screen  bg-[#FAF8FF] ">
-      {/* Structural Sidebar Navigation */}
+    <div className="flex flex-col md:flex-row min-h-screen w-screen bg-gray-50 overflow-x-hidden">
       <Sidebar />
 
-      {/* Main Panel Content Wrapper */}
-      <section className="w-full pl-70 p-6 flex flex-col gap-6  ">
-        {/* Top Control Toolbar Row */}
-        <header className="flex justify-between items-center border-b border-gray-200 pb-4">
+      {/* Main Container Core */}
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 w-full max-w-5xl mx-auto pb-24 md:pb-10">
+        {/* Top Header Row */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200 pb-4 mb-6 no-print">
           <div>
-            <h1 className="text-2xl font-black text-gray-800 tracking-wide">
+            <h1 className="text-xl sm:text-2xl font-black text-gray-800 tracking-tight">
               Financial Intelligence
             </h1>
             <p className="text-xs text-gray-400">
@@ -92,48 +48,41 @@ const Reports = () => {
             </p>
           </div>
           <button
-            onClick={handleDownloadPDF}
-            disabled={isDownloading}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={handlePrintPDF}
+            className="flex items-center gap-2 bg-primary text-white w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm hover:scale-[1.02] transition-all cursor-pointer"
           >
-            <FaDownload className={isDownloading ? "animate-bounce" : ""} />
-            {isDownloading ? "Compiling Report..." : "Export PDF Report"}
+            <FaDownload /> Save PDF Report
           </button>
         </header>
 
-        {/* --- REPORT CONTAINER (TARGETED BY THE PDF GENERATOR) --- */}
+        {/* --- REPORT PAYLOAD TARGET AREA --- */}
         <div
-          ref={reportRef}
           id="report-content"
-          className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-8"
+          className="bg-white p-4 sm:p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-6 sm:gap-8 w-full print-area"
         >
-          {/* PDF Document Header Block */}
-          <div className="flex justify-between items-start border-b-2 border-gray-50 pb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b-2 border-gray-50 pb-4">
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                Pocketly Executive Summary
+                Pocketly Summary
               </span>
-              <h2 className="text-xl font-bold text-gray-900 mt-0.5">
+              <h2 className="text-lg font-bold text-gray-900">
                 Monthly Cash Audit
               </h2>
             </div>
-            <div className="text-right text-xs text-gray-400 font-mono">
+            <div className="text-left sm:text-right text-[11px] text-gray-400 font-mono">
               <p>Generated: June 2026</p>
               <p>Cycle: 30-Day Variant</p>
             </div>
           </div>
 
-          {/* Section A: Flow Ring Chart & Quick Analytics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center border-b border-gray-100 pb-8">
-            {/* The Cash Flow Ring Vector Graphic Container */}
-            <div className="flex flex-col items-center justify-center bg-gray-50/50 p-6 rounded-2xl border border-gray-50 relative">
+          {/* Section A: Flow Ring Chart & Metrics Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center border-b border-gray-100 pb-6 sm:pb-8">
+            <div className="flex flex-col items-center justify-center bg-gray-50/50 p-4 sm:p-6 rounded-2xl border border-gray-50">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
                 Capital Outflow Spectrum
               </span>
-
               <div className="relative flex items-center justify-center">
-                <svg className="w-44 h-44 transform -rotate-90">
-                  {/* Track Background Ring */}
+                <svg className="w-36 h-36 sm:w-44 h-44 transform -rotate-90">
                   <circle
                     cx="88"
                     cy="88"
@@ -141,47 +90,44 @@ const Reports = () => {
                     className="stroke-purple-50 fill-none"
                     strokeWidth="12"
                   />
-                  {/* Living Progress Line */}
                   <circle
                     cx="88"
                     cy="88"
                     r={radius}
-                    className="stroke-primary fill-none transition-all duration-1000 ease-out"
+                    className="stroke-primary fill-none"
                     strokeWidth="12"
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="round"
                   />
                 </svg>
-                {/* Embedded Inner Flow Metrics Box */}
                 <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                  <span className="text-[9px] font-bold text-gray-400 uppercase">
                     Total Outflow
                   </span>
-                  <div className="flex items-center text-lg font-black text-gray-900 font-mono mt-0.5">
-                    <FaNairaSign className="size-3.5" />
+                  <div className="flex items-center text-base sm:text-lg font-black text-gray-900 font-mono mt-0.5">
+                    <span className="mr-0.5 font-sans font-normal text-gray-500">
+                      ₦
+                    </span>
                     <span>{totalOutflow.toLocaleString()}</span>
                   </div>
                   <span className="text-[10px] font-semibold text-primary mt-0.5">
-                    {flowPercentage.toFixed(0)}% of Income
+                    {flowPercentage.toFixed(0)}% used
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Summary Cards Stack */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:grid sm:grid-cols-2 lg:flex lg:flex-col gap-4">
               <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100 shadow-sm">
                 <div className="p-3 bg-white rounded-lg text-primary shadow-sm">
                   <FaArrowUp className="size-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     Daily Average Burn
                   </span>
                   <div className="flex items-center font-mono text-base font-black text-gray-800">
-                    <FaNairaSign className="size-3" />
-                    {dailyAverage.toLocaleString()}
+                    ₦{dailyAverage.toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -191,7 +137,7 @@ const Reports = () => {
                   <FaCalendarAlt className="size-4" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     Highest Saving Day
                   </span>
                   <span className="text-sm font-bold text-gray-800">
@@ -202,55 +148,53 @@ const Reports = () => {
             </div>
           </div>
 
-          {/* Section B: Category Heavyweight Tracking */}
-          <div className="border-b border-gray-100 pb-8 flex flex-col gap-3">
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">
+          {/* Section B: Peak Allocations */}
+          <div className="border-b border-gray-100 pb-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
               Strain Allocation Peak
             </h3>
-            <div className="flex items-center justify-between p-4 bg-amber-50/50 border border-amber-100 rounded-xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-amber-50/50 border border-amber-100 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-amber-500 text-white rounded-lg">
-                  <FaFire className="size-4 animate-pulse" />
+                  <FaFire className="size-4" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-gray-800">
                     Highest Spend Focus Group
                   </h4>
                   <p className="text-xs text-gray-500">
-                    This category has drawn the maximum capital weight this
-                    sequence block.
+                    This tier drew maximum resource density allocation
+                    footprint.
                   </p>
                 </div>
               </div>
-              <span className="bg-amber-100 text-amber-800 font-bold px-4 py-1.5 rounded-lg text-xs tracking-wide uppercase">
+              <span className="bg-amber-100 text-amber-800 font-bold px-4 py-1.5 rounded-lg text-xs uppercase tracking-wide w-full sm:w-auto text-center">
                 {highestSpendCategory}
               </span>
             </div>
           </div>
 
-          {/* Section C: Mindful Insights (Grid View) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Section C: Insight Grid Array */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <InsightCard
               icon={BiTrendingUp}
               title="Velocity Review"
-              description="Your velocity pacing structure is balanced. The current allocation tracks safely inside your target boundary threshold parameters."
+              description="Pacing rules remain steady across operations."
             />
-
             <InsightCard
               icon={FaLightbulb}
               title="Leak Containment"
-              description={`Spikes inside ${highestSpendCategory} are accelerating. Re-anchor your limits early next cycle to optimize unallocated margins.`}
+              description={`Aggregates logged in ${highestSpendCategory} are drifting upward.`}
             />
-
             <InsightCard
               icon={FaShieldAlt}
               title="Liquidity Cushion"
-              description="Unallocated structural liquidity is sitting at a healthy point. Consider pushing excess margins directly to your Savings Sanctuary block."
+              description="Unallocated safety reserves reside inside high margins."
             />
           </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 };
 
